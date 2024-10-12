@@ -109,16 +109,17 @@ public:
             std::size_t farthest_point = 0;
 
             for (std::size_t i = 0; i < r_; i++) {
-                nanoflann::KNNResultSet<double> tempResultSet(1);
-                std::size_t temp_index;
-                double temp_distance;
                 
-                tempResultSet.init(&temp_index, &temp_distance);
+                nanoflann::KNNResultSet<double> tempResultSet(1);
+                std::size_t *temp_index= new std::size_t;
+                double *temp_distance= new double;
+
+                tempResultSet.init(temp_index, temp_distance);
                 
                 original_tree.findNeighbors(tempResultSet, data_->get_row(index[i]), nanoflann::SearchParams());
 
-                if (temp_distance > max_distance) {
-                    max_distance = temp_distance;
+                if (*temp_distance > max_distance) {
+                    max_distance = *temp_distance;
                     farthest_point = index[i];
                 }
             }
@@ -142,14 +143,14 @@ public:
 
                 for (std::size_t i = 0; i < N - indices.size() * r_; i++) {
                     nanoflann::KNNResultSet<double> tempResultSet_last(1);
-                    std::size_t temp_index_last;
-                    double temp_distance_last;
-                    tempResultSet_last.init(&temp_index_last, &temp_distance_last);
+                    std::size_t *temp_index_last= new std::size_t;
+                    double *temp_distance_last= new double;
+                    tempResultSet_last.init(temp_index_last, temp_distance_last);
 
                     original_tree.findNeighbors(tempResultSet_last, data_->get_row(index[i]), nanoflann::SearchParams());
 
-                    if (temp_distance_last > max_distance) {
-                        max_distance = temp_distance_last;
+                    if (*temp_distance_last > max_distance) {
+                        max_distance = *temp_distance_last;
                         farthest_point_last = index[i];
                     }
                 }
