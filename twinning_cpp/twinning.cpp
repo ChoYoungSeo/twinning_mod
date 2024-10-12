@@ -85,6 +85,8 @@ public:
         std::size_t dim = data_->ncol();
 
         KDTree tree(dim, *data_, nanoflann::KDTreeSingleIndexAdaptorParams(leaf_size_));
+        KDTree original_tree(dim, *data_, nanoflann::KDTreeSingleIndexAdaptorParams(leaf_size_));
+        
         
         nanoflann::KNNResultSet<double> resultSet(r_);
         std::size_t *index = new std::size_t[r_];
@@ -97,23 +99,60 @@ public:
         std::vector<std::size_t> indices;
         indices.reserve(N / r_ + 1);
         std::size_t position = u1_;
+
+        nanoflann::KNNResultSet<double> tempResultSet(1);
+        std::size_t temp_index;
+        double temp_distance;
         
-        while(true)
-        {
+        while (true) {
             resultSet.init(index, distance);
             tree.findNeighbors(resultSet, data_->get_row(position), nanoflann::SearchParams());
-            indices.push_back(index[0]);
+
+            double max_distance = -1;
+            std::size_t farthest_point = 0;
+
+            for (std::size_t i = 0; i < r_; i++) {
+                tempResultSet.init(&temp_index, &temp_distance);
+                
+                original_tree.findNeighbors(tempResultSet, data_->get_row(index[i]), nanoflann::SearchParams());
+
+                if (temp_distance > max_distance) {
+                    max_distance = temp_distance;
+                    farthest_point = index[i];
+                }
+            }
+
+            indices.push_back(farthest_point);
             
-            for(std::size_t i = 0; i < r_; i++)
+            for (std::size_t i = 0; i < r_; i++) {
                 tree.removePoint(index[i]);
+            }
 
             resultSet_next_u.init(&index_next_u, &distance_next_u);
-            tree.findNeighbors(resultSet_next_u, data_->get_row(index[r_ - 1]), nanoflann::SearchParams());  
+            tree.findNeighbors(resultSet_next_u, data_->get_row(index[r_ - 1]), nanoflann::SearchParams());
             position = index_next_u;
 
-            if(N - indices.size() * r_ <= r_)
-            {
-                indices.push_back(position);
+            if (N - indices.size() * r_ <= r_) {
+                resultSet.init(index, distance);
+                tree.findNeighbors(resultSet, data_->get_row(position), nanoflann::SearchParams());
+
+                double max_distance = -1;
+                std::size_t farthest_point_last = 0;
+
+                for (std::size_t i = 0; i < N - indices.size() * r_; i++) {
+                    nanoflann::KNNResultSet<double> tempResultSet_last(1);
+                    std::size_t temp_index_last;
+                    double temp_distance_last;
+                    tempResultSet_last.init(&temp_index_last, &temp_distance_last);
+
+                    original_tree.findNeighbors(tempResultSet_last, data_->get_row(index[i]), nanoflann::SearchParams());
+
+                    if (temp_distance_last > max_distance) {
+                        max_distance = temp_distance_last;
+                        farthest_point_last = index[i];
+                    }
+                }
+                indices.push_back(farthest_point_last);
                 break;
             }
         }
@@ -123,6 +162,7 @@ public:
 
         return indices;
     }
+
 
     std::vector<std::size_t> get_sequence()
     {
