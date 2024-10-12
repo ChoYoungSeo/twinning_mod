@@ -122,7 +122,7 @@ public:
                 }
             }
 
-            indices.push_back(farthest_point);
+            indices.push_back(index[r_-1]);
             
             for (std::size_t i = 0; i < r_; i++) {
                 tree.removePoint(index[i]);
