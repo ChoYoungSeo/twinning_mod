@@ -126,8 +126,8 @@ public:
 
             indices.push_back(farthest_point);
             
-            for (std::size_t i = 0; i < r_; i++) {
-                tree.removePoint(index[i]);
+            for (std::size_t j = 0; j < r_; j++) {
+                tree.removePoint(index[j]);
             }
 
             resultSet_next_u.init(&index_next_u, &distance_next_u);
@@ -141,17 +141,17 @@ public:
                 double max_distance = -1;
                 std::size_t farthest_point_last = 0;
 
-                for (std::size_t i = 0; i < N - indices.size() * r_; i++) {
+                for (std::size_t k = 0; k < N - indices.size() * r_; k++) {
                     nanoflann::KNNResultSet<double> tempResultSet_last(1);
                     std::size_t *temp_index_last= new std::size_t;
                     double *temp_distance_last= new double;
                     tempResultSet_last.init(temp_index_last, temp_distance_last);
 
-                    original_tree.findNeighbors(tempResultSet_last, data_->get_row(index[i]), nanoflann::SearchParams());
+                    original_tree.findNeighbors(tempResultSet_last, data_->get_row(index[k]), nanoflann::SearchParams());
 
                     if (*temp_distance_last > max_distance) {
                         max_distance = *temp_distance_last;
-                        farthest_point_last = index[i];
+                        farthest_point_last = index[k];
                     }
                 }
                 indices.push_back(farthest_point_last);
